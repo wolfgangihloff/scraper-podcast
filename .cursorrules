@@ -1,0 +1,62 @@
+# Cursor Rules for Podcast Scraper Project
+
+## Project Context
+This is a Python-based podcast scraper and transcription toolkit supporting:
+- Política Exterior (Spanish political podcasts)
+- eGovernment Podcast (German digitalization episodes)
+- StackIT AI Assistant API integration for transcription
+
+## Development Guidelines
+
+### Python Environment
+- Always use the existing virtual environment (.venv)
+- Python 3.11+ is required
+- Core dependencies: feedparser, requests, beautifulsoup4, python-dotenv
+
+### Code Structure
+- Modular design with separate scrapers for different sources
+- `scraper_politica_exterior.py` - Spanish political podcast scraper
+- `scraper_egovpodcast.py` - German eGovernment podcast scraper  
+- `transcribe.py` - StackIT API transcription service
+- `run_pipeline.py` - Complete workflow orchestration
+
+### File Organization
+- `downloads/` - Audio files from Política Exterior
+- `downloads_egov/` - Audio files from eGovernment podcast
+- `transcriptions/` - Transcripts from downloads/
+- `transcriptions_egov/` - Transcripts from downloads_egov/
+
+### API Configuration
+- Environment variables in `.env` (DO NOT commit)
+- Template available as `.env.template`
+- StackIT AI Assistant API for transcription services
+
+### Testing Commands
+```bash
+# Test individual scrapers
+python scraper_politica_exterior.py
+python scraper_egovpodcast.py
+
+# Test transcription
+python transcribe.py --list
+python transcribe.py --file "filename"
+
+# Full pipeline
+python run_pipeline.py
+```
+
+### Code Style
+- Follow existing regex patterns for audio URL extraction
+- Use proper error handling with try/except blocks
+- Include progress reporting for long-running operations
+- Maintain compatibility with both .m4a and .mp3 formats
+
+### Security
+- Never commit authentication tokens
+- Use environment variables for sensitive data
+- Validate URLs before processing
+
+### Debugging
+- Use `--list` flag to see available files
+- Check download folders before transcription
+- Verify .env configuration for API errors 

@@ -1,11 +1,12 @@
-import os
-import requests
-import json
-import time
-import sys
 import argparse
-from dotenv import load_dotenv
+import json
+import os
+import sys
+import time
 from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()

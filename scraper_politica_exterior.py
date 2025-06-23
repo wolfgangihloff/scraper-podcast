@@ -1,7 +1,8 @@
-import feedparser
-import requests
 import os
 import re
+
+import feedparser
+import requests
 from bs4 import BeautifulSoup
 
 def find_audio_urls_in_page(url):
@@ -59,7 +60,7 @@ def main():
         # Download audio file
         try:
             print("Downloading audio file...")
-            resp = requests.get(audio_url, stream=True)
+            resp = requests.get(audio_url, stream=True, timeout=30)
             resp.raise_for_status()
             
             # Extract filename from URL
@@ -69,17 +70,46 @@ def main():
                 
             filepath = os.path.join(downloads_folder, filename)
             
-            with open(filepath, "wb") as f:
-                for chunk in resp.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+            # Check if file already exists
+            if os.path.exists(filepath):
+                print(f"File already exists: {filepath}")
+                return
             
-            print(f"Successfully saved: {filepath}")
+            # Create downloads folder with error handling
+            try:
+                os.makedirs(downloads_folder, exist_ok=True)
+            except OSError as e:
+                print(f"ERROR creating downloads folder: {e}")
+                return
+            
+            # Download with proper error handling
+            try:
+                with open(filepath, "wb") as f:
+                    for chunk in resp.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                
+                # Verify file was written successfully
+                if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                    print(f"Successfully saved: {filepath}")
+                else:
+                    print(f"ERROR: File was not saved properly: {filepath}")
+                    
+            except IOError as e:
+                print(f"ERROR writing file {filepath}: {e}")
+                # Clean up partial file
+                if os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except OSError:
+                        pass
+            except OSError as e:
+                print(f"ERROR with file system operation: {e}")
             
         except requests.RequestException as e:
             print(f"ERROR downloading audio: {e}")
         except Exception as e:
-            print(f"ERROR: {e}")
+            print(f"UNEXPECTED ERROR: {e}")
     
     else:
         print("No audio URLs found on the podcast page.")

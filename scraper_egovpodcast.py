@@ -6,11 +6,12 @@ Downloads all episodes from egovernment-podcast.com
 
 import os
 import re
-import requests
-import feedparser
+import time
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
-import time
+
+import feedparser
+import requests
 
 # Try to import selenium for headless browsing
 try:
@@ -34,36 +35,79 @@ def clean_filename(filename):
     return filename
 
 def download_audio(url, filename, downloads_dir):
-    """Download audio file with progress tracking"""
+    """Download audio file with progress tracking and robust error handling"""
     try:
         print(f"Downloading: {filename}")
         print(f"URL: {url}")
         
-        response = requests.get(url, stream=True, timeout=30)
-        response.raise_for_status()
+        # Ensure downloads directory exists
+        try:
+            downloads_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            print(f"❌ Error creating downloads directory: {e}")
+            return None
+        
+        filepath = downloads_dir / filename
+        
+        # Check if file already exists
+        if filepath.exists():
+            print(f"File already exists: {filepath}")
+            return filepath
+        
+        # Download with timeout and error handling
+        try:
+            response = requests.get(url, stream=True, timeout=30)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"❌ Network error downloading {filename}: {e}")
+            return None
         
         # Get file size for progress tracking
         total_size = int(response.headers.get('content-length', 0))
-        
-        filepath = downloads_dir / filename
         downloaded_size = 0
         
-        with open(filepath, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    downloaded_size += len(chunk)
-                    
-                    # Show progress
-                    if total_size > 0:
-                        progress = (downloaded_size / total_size) * 100
-                        print(f"\rProgress: {progress:.1f}% ({downloaded_size // (1024*1024):.1f}MB / {total_size // (1024*1024):.1f}MB)", end='', flush=True)
-        
-        print(f"\n✅ Successfully downloaded: {filepath}")
-        return filepath
+        # Download with file operation error handling
+        try:
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+                        
+                        # Show progress
+                        if total_size > 0:
+                            progress = (downloaded_size / total_size) * 100
+                            print(f"\rProgress: {progress:.1f}% ({downloaded_size // (1024*1024):.1f}MB / {total_size // (1024*1024):.1f}MB)", end='', flush=True)
+            
+            # Verify download completed successfully
+            if filepath.exists() and filepath.stat().st_size > 0:
+                print(f"\n✅ Successfully downloaded: {filepath}")
+                return filepath
+            else:
+                print(f"\n❌ Download failed: File is empty or missing")
+                # Clean up empty file
+                if filepath.exists():
+                    try:
+                        filepath.unlink()
+                    except OSError:
+                        pass
+                return None
+                
+        except IOError as e:
+            print(f"\n❌ File I/O error downloading {filename}: {e}")
+            # Clean up partial file
+            if filepath.exists():
+                try:
+                    filepath.unlink()
+                except OSError:
+                    pass
+            return None
+        except OSError as e:
+            print(f"\n❌ File system error downloading {filename}: {e}")
+            return None
         
     except Exception as e:
-        print(f"❌ Error downloading {filename}: {e}")
+        print(f"❌ Unexpected error downloading {filename}: {e}")
         return None
 
 def extract_audio_with_browser(episode_url):

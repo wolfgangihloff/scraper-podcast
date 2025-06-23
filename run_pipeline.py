@@ -3,8 +3,8 @@
 Complete pipeline to scrape podcast and transcribe audio
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Import our modules
@@ -41,13 +41,19 @@ def main():
         return 0
     
     # Step 3: Transcribe audio
-    print("Step 2: Transcribing audio...")
+    print("Step 3: Transcribing audio...")
     try:
+        # Save original sys.argv and set arguments for transcribe.py
+        original_argv = sys.argv.copy()
+        sys.argv = ['transcribe.py']  # Default behavior: process smallest file
         transcribe_main()
+        sys.argv = original_argv  # Restore original argv
         print("✅ Transcription completed")
     except Exception as e:
         print(f"❌ Transcription failed: {e}")
         print("Check your .env file authentication details")
+        # Restore original argv in case of error
+        sys.argv = original_argv if 'original_argv' in locals() else sys.argv
         return 1
     
     print()
