@@ -9,23 +9,52 @@ from pathlib import Path
 
 # Import our modules
 from scraper_politica_exterior import main as scrape_main
+from scraper_youtube import download_youtube_video
 from transcribe import main as transcribe_main
 
 def main():
     """
     Run the complete pipeline: scrape podcast -> transcribe audio
     """
-    print("=== Política Exterior Podcast Pipeline ===")
+    print("=== Podcast & YouTube Pipeline ===")
     print()
     
-    # Step 1: Scrape podcast
-    print("Step 1: Downloading latest podcast episode...")
-    try:
-        scrape_main()
-        print("✅ Podcast download completed")
-    except Exception as e:
-        print(f"❌ Podcast download failed: {e}")
-        return 1
+    # Check if YouTube URL is provided
+    if len(sys.argv) > 1 and ('youtube.com' in sys.argv[1] or 'youtu.be' in sys.argv[1]):
+        print("=== YouTube Video Pipeline ===")
+        print()
+        
+        # Step 1: Download YouTube video
+        print("Step 1: Downloading YouTube video...")
+        try:
+            success = download_youtube_video(sys.argv[1])
+            if success:
+                print("✅ YouTube video download completed")
+            else:
+                print("❌ YouTube video download failed")
+                return 1
+        except Exception as e:
+            print(f"❌ YouTube video download failed: {e}")
+            return 1
+        
+        # Update transcription folder for YouTube videos
+        transcription_folder = "transcriptions_youtube"
+        
+    else:
+        print("=== Política Exterior Podcast Pipeline ===")
+        print()
+        
+        # Step 1: Scrape podcast
+        print("Step 1: Downloading latest podcast episode...")
+        try:
+            scrape_main()
+            print("✅ Podcast download completed")
+        except Exception as e:
+            print(f"❌ Podcast download failed: {e}")
+            return 1
+        
+        # Use default transcription folder for podcasts
+        transcription_folder = "transcriptions"
     
     print()
     
@@ -58,8 +87,12 @@ def main():
     
     print()
     print("🎉 Pipeline completed successfully!")
-    print("Check the 'downloads' folder for audio files")
-    print("Check the 'transcriptions' folder for transcripts")
+    if 'transcription_folder' in locals() and transcription_folder == "transcriptions_youtube":
+        print("Check the 'downloads_youtube' folder for video files")
+        print("Check the 'transcriptions_youtube' folder for transcripts")
+    else:
+        print("Check the 'downloads' folder for audio files")
+        print("Check the 'transcriptions' folder for transcripts")
     
     return 0
 

@@ -244,6 +244,8 @@ def get_transcription_output_path(audio_file_path):
     # Determine output folder based on file source
     if "egov" in audio_filename.lower() or "downloads_egov" in str(audio_file_path):
         output_dir = Path("transcriptions_egov")
+    elif "downloads_youtube" in str(audio_file_path):
+        output_dir = Path("transcriptions_youtube")
     else:
         output_dir = Path("transcriptions")
     
@@ -345,6 +347,7 @@ Examples:
 Notes:
   • Files from downloads/ → transcriptions/
   • Files from downloads_egov/ → transcriptions_egov/
+  • Files from downloads_youtube/ → transcriptions_youtube/
   • Existing transcriptions are automatically skipped
         """
     )
@@ -359,13 +362,14 @@ Notes:
     
     downloads_dir = Path("downloads")
     downloads_egov_dir = Path("downloads_egov")
+    downloads_youtube_dir = Path("downloads_youtube")
     
     # Create downloads folder if it doesn't exist
     downloads_dir.mkdir(exist_ok=True)
     
-    # Find audio files from both download folders
+    # Find audio files from all download folders
     audio_files = []
-    audio_patterns = ['*.mp3', '*.m4a', '*.wav', '*.ogg', '*.mp4']
+    audio_patterns = ['*.mp3', '*.m4a', '*.wav', '*.ogg', '*.mp4', '*.webm']
     
     # Main downloads folder
     for pattern in audio_patterns:
@@ -376,11 +380,17 @@ Notes:
         for pattern in audio_patterns:
             audio_files.extend(downloads_egov_dir.glob(pattern))
     
+    # YouTube downloads folder
+    if downloads_youtube_dir.exists():
+        for pattern in audio_patterns:
+            audio_files.extend(downloads_youtube_dir.glob(pattern))
+    
     if not audio_files:
         print("No audio files found in downloads folders")
         print("Place your audio files in one of these folders:")
         print("  • downloads/ (for transcription to transcriptions/)")
         print("  • downloads_egov/ (for transcription to transcriptions_egov/)")
+        print("  • downloads_youtube/ (for transcription to transcriptions_youtube/)")
         return 1
     
     # List files if requested
@@ -388,8 +398,18 @@ Notes:
         print(f"Found {len(audio_files)} audio file(s):")
         for i, file in enumerate(audio_files, 1):
             file_size = file.stat().st_size / (1024 * 1024)
-            folder = "downloads" if file.parent.name == "downloads" else "downloads_egov"
-            transcription_folder = "transcriptions" if folder == "downloads" else "transcriptions_egov"
+            if file.parent.name == "downloads":
+                folder = "downloads"
+                transcription_folder = "transcriptions"
+            elif file.parent.name == "downloads_egov":
+                folder = "downloads_egov"
+                transcription_folder = "transcriptions_egov"
+            elif file.parent.name == "downloads_youtube":
+                folder = "downloads_youtube"
+                transcription_folder = "transcriptions_youtube"
+            else:
+                folder = file.parent.name
+                transcription_folder = "transcriptions"
             exists = "✅" if transcription_exists(file) else "❌"
             print(f"  {i}. {file.name} ({file_size:.1f} MB) [{folder} → {transcription_folder}] {exists}")
         print("\nLegend: ✅ = transcription exists, ❌ = not transcribed yet")

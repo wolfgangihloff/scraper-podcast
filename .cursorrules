@@ -4,6 +4,7 @@
 This is a Python-based podcast scraper and transcription toolkit supporting:
 - Política Exterior (Spanish political podcasts)
 - eGovernment Podcast (German digitalization episodes)
+- YouTube Videos (individual video downloads)
 - StackIT AI Assistant API integration for transcription
 
 ## Development Guidelines
@@ -17,14 +18,17 @@ This is a Python-based podcast scraper and transcription toolkit supporting:
 - Modular design with separate scrapers for different sources
 - `scraper_politica_exterior.py` - Spanish political podcast scraper
 - `scraper_egovpodcast.py` - German eGovernment podcast scraper  
+- `scraper_youtube.py` - YouTube video scraper
 - `transcribe.py` - StackIT API transcription service
 - `run_pipeline.py` - Complete workflow orchestration
 
 ### File Organization
 - `downloads/` - Audio files from Política Exterior
 - `downloads_egov/` - Audio files from eGovernment podcast
+- `downloads_youtube/` - Video files from YouTube
 - `transcriptions/` - Transcripts from downloads/
 - `transcriptions_egov/` - Transcripts from downloads_egov/
+- `transcriptions_youtube/` - Transcripts from downloads_youtube/
 
 ### API Configuration
 - Environment variables in `.env` (DO NOT commit)
@@ -36,6 +40,7 @@ This is a Python-based podcast scraper and transcription toolkit supporting:
 # Test individual scrapers
 python scraper_politica_exterior.py
 python scraper_egovpodcast.py
+python scraper_youtube.py <YouTube URL>
 
 # Test transcription
 python transcribe.py --list
@@ -43,6 +48,7 @@ python transcribe.py --file "filename"
 
 # Full pipeline
 python run_pipeline.py
+python run_pipeline.py <YouTube URL>
 ```
 
 ### Code Style
@@ -50,6 +56,7 @@ python run_pipeline.py
 - Use proper error handling with try/except blocks
 - Include progress reporting for long-running operations
 - Maintain compatibility with both .m4a and .mp3 formats
+- Support video formats (.mp4, .webm) for YouTube downloads
 
 ### Security
 - Never commit authentication tokens

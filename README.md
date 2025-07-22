@@ -2,9 +2,10 @@
 
 A Python toolkit to download podcast episodes from multiple sources and transcribe them using the StackIT AI Assistant API.
 
-**Supported Podcasts:**
+**Supported Sources:**
 - 🇪🇸 **Política Exterior** - Spanish foreign policy podcast
 - 🇩🇪 **eGovernment Podcast** - German digitalization and government tech podcast (220+ episodes)
+- 🎥 **YouTube Videos** - Individual YouTube video downloads
 
 ## ✅ Current Status
 
@@ -16,16 +17,19 @@ A Python toolkit to download podcast episodes from multiple sources and transcri
 
 ## Features
 
-### Podcast Scraping
+### Content Scraping
 - **`scraper_politica_exterior.py`** - Política Exterior podcast scraper
 - **`scraper_egovpodcast.py`** - eGovernment podcast scraper (all 220+ episodes)
+- **`scraper_youtube.py`** - YouTube video scraper for individual videos
 - Web scraping to extract audio URLs from podcast pages
 - Downloads audio files from CDN sources (Podbean, Podseed)
+- Downloads YouTube videos using yt-dlp
 - Saves audio files with original filenames
 - Multiple extraction methods: direct CDN, RSS feeds, static HTML parsing
 - Optional headless browser support for JavaScript-generated URLs
 - Error handling for network issues and missing audio files
-- Support for common audio formats (MP3, MP4, M4A, WAV, OGG)
+- Support for common audio formats (MP3, MP4, M4A, WAV, OGG, WebM)
+- Progress reporting and metadata extraction
 
 ### Audio Transcription (`transcribe.py`)
 - Integration with StackIT AI Assistant API
@@ -94,6 +98,11 @@ python scraper_egovpodcast.py
 python scraper_politica_exterior.py
 ```
 
+**Download YouTube Video:**
+```bash
+python scraper_youtube.py https://www.youtube.com/watch?v=WOQbDOrI_5c
+```
+
 **Transcribe downloaded files:**
 ```bash
 python transcribe.py --all
@@ -115,6 +124,25 @@ python scraper_politica_exterior.py
 # Downloads latest episode to downloads/
 ```
 
+**YouTube Videos:**
+```bash
+python scraper_youtube.py https://www.youtube.com/watch?v=WOQbDOrI_5c
+# Downloads video to downloads_youtube/
+```
+
+**Supported YouTube URL formats:**
+- `https://www.youtube.com/watch?v=VIDEO_ID`
+- `https://youtu.be/VIDEO_ID`
+- `https://www.youtube.com/shorts/VIDEO_ID`
+- Playlist URLs (extracts individual video)
+
+**YouTube Features:**
+- Downloads in best available quality (MP4/WebM)
+- Saves video metadata (JSON)
+- Downloads subtitles if available (EN, DE, ES)
+- Progress reporting with download speed
+- Automatic playlist URL handling
+
 #### 2. Transcribe Audio Files
 
 **Process all files:**
@@ -132,9 +160,13 @@ python transcribe.py --file "episode_name"
 python transcribe.py --list
 ```
 
-#### 3. Complete Pipeline (Política Exterior only)
+#### 3. Complete Pipeline
 ```bash
+# For Política Exterior podcast
 python run_pipeline.py
+
+# For YouTube videos
+python run_pipeline.py https://www.youtube.com/watch?v=WOQbDOrI_5c
 ```
 
 ### Moving Files Between Folders
@@ -199,25 +231,29 @@ If no audio is found on the main page, the scraper will check the RSS feed for a
   - `requests` - HTTP requests and downloads
   - `beautifulsoup4` - HTML parsing
   - `python-dotenv` - Environment variable management
+  - `yt-dlp` - YouTube video downloading
 
 ## Project Structure
 
 ```
 ├── scraper_politica_exterior.py  # Política Exterior podcast scraper
-├── scraper_egovpodcast.py  # eGovernment podcast scraper
-├── transcribe.py           # Audio transcription script
-├── run_pipeline.py         # Complete pipeline automation (Política Exterior)
-├── requirements.txt        # Python dependencies
-├── .env.template           # Authentication template
-├── .env                   # Your authentication details (create from template)
-├── .gitignore             # Git ignore file
-├── downloads/             # Main download folder for transcription
-├── downloads_egov/        # eGovernment podcast downloads
-├── transcriptions/        # Transcription text files (created automatically)
-├── transcriptions_egov/   # eGovernment transcriptions
-├── README.md              # This file  
-├── LICENSE                # Project license
-└── CLAUDE.md              # Claude Code guidance file
+├── scraper_egovpodcast.py        # eGovernment podcast scraper
+├── scraper_youtube.py            # YouTube video scraper
+├── transcribe.py                 # Audio transcription script
+├── run_pipeline.py               # Complete pipeline automation
+├── requirements.txt              # Python dependencies
+├── .env.template                 # Authentication template
+├── .env                         # Your authentication details (create from template)
+├── .gitignore                   # Git ignore file
+├── downloads/                   # Política Exterior downloads
+├── downloads_egov/              # eGovernment podcast downloads
+├── downloads_youtube/           # YouTube video downloads
+├── transcriptions/              # Política Exterior transcriptions
+├── transcriptions_egov/         # eGovernment transcriptions
+├── transcriptions_youtube/      # YouTube transcriptions
+├── README.md                    # This file  
+├── LICENSE                      # Project license
+└── CLAUDE.md                    # Claude Code guidance file
 ```
 
 ## How It Works
@@ -232,6 +268,13 @@ If no audio is found on the main page, the scraper will check the RSS feed for a
 2. **Direct CDN Construction**: Builds CDN URLs using pattern: `https://cdn.podseed.org/egovernment/egov{number}.mp4`
 3. **URL Testing**: Validates each constructed URL before download
 4. **Fallback Methods**: Optional headless browser support for JavaScript-generated URLs
+
+### YouTube Scraper (`scraper_youtube.py`)
+1. **URL Validation**: Validates various YouTube URL formats (watch, youtu.be, shorts, playlists)
+2. **Video Extraction**: Uses yt-dlp to extract video information and download URLs
+3. **Quality Selection**: Downloads in best available quality (MP4/WebM)
+4. **Metadata & Subtitles**: Saves video metadata and downloads available subtitles
+5. **Progress Reporting**: Real-time download progress with speed and percentage
 
 ### Transcription Process (`transcribe.py`)
 1. **File Upload**: Gets secure upload URL from StackIT API

@@ -9,6 +9,9 @@ downloads/
 downloads_egov/
 transcriptions/
 transcriptions_egov/
+transcriptions_youtube/
+downloads_youtube/
+
 
 # Analysis files and development artifacts
 analysis/
